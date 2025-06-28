@@ -53,6 +53,19 @@ pipeline {
                 sh 'trivy image --format table -o image-booking.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
             }
         }
+        stage('Upload Trivy scan reports to S3') {
+            steps {
+              
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-cred'
+                    ]]) {
+                        sh 'aws s3 cp image-booking.html s3://travel-ease-booking-trivy-report/'
+                        sh 'aws s3 cp fs-booking.html s3://travel-ease-booking-trivy-report/'
+                    }
+            
+            }
+        }
         stage('Login ECR') {
             steps {
                 withCredentials([[
@@ -73,20 +86,20 @@ pipeline {
                 }
             }
         }
-        stage('pulling main production branch') {
+        stage('pulling dev-prod production branch') {
             steps {
                 dir('TravelEase') {
-                    git branch: 'main', credentialsId: 'Sujal', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
+                    git branch: 'dev-prod', credentialsId: 'Sujal', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
-        stage('Updating main production branch') {
+        stage('Updating dev-prod production branch') {
             steps {
                 sh 'mkdir -p ./TravelEase/booking'
                 sh 'rsync -av --exclude=".git" ./booking/ ./TravelEase/booking/'
             }
         }
-        stage('push code to main production branch') {
+        stage('push code to dev-prod production branch') {
             steps {
                 dir('TravelEase') {
             withCredentials([usernamePassword(credentialsId: 'Sujal', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
@@ -95,8 +108,8 @@ pipeline {
                     git config user.email "$GIT_USER@users.noreply.github.com"
 
                     git add .
-                    git commit -m "CI: Updated booking into main production branch" || echo "No changes to commit"
-                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:main
+                    git commit -m "CI: Updated booking into dev-prod production branch" || echo "No changes to commit"
+                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:dev-prod
                 '''
             }
         }

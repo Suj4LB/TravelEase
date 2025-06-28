@@ -19,6 +19,20 @@ pipeline {
                 }
             }
         }
+         stage('Installing Dependencies') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                }
+            }
+        }
+         stage('Build Code') {
+            steps {
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
         stage('Unit Test') {
             steps {
                 echo 'Hello World'
@@ -53,6 +67,19 @@ pipeline {
                 sh 'trivy image --format table -o image-frontend.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
             }
         }
+        stage('Upload Trivy scan reports to S3') {
+            steps {
+              
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-cred'
+                    ]]) {
+                        sh 'aws s3 cp image-frontend.html s3://travel-ease-frontend-trivy-report/'
+                        sh 'aws s3 cp fs-frontend.html s3://travel-ease-frontend-trivy-report/'
+                    }
+            
+            }
+        }
         stage('Login ECR') {
             steps {
                 withCredentials([[
@@ -73,17 +100,17 @@ pipeline {
                 }
             }
         }
-        stage('pulling main production branch') {
+        stage('pulling dev production branch') {
             steps {
                 dir('TravelEase') {
-                    git branch: 'main', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
+                    git branch: 'dev-prod', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
-        stage('Updating main production branch') {
+        stage('Updating dev production branch') {
             steps {
                 sh 'mkdir -p ./TravelEase/frontend'
-                sh 'rsync -av --exclude=".git" ./frontend/ ./TravelEase/frontend/'
+                sh 'rsync -av --exclude=".git" --exclude="dist" ./frontend/ ./TravelEase/frontend/'
             }
         }
         stage('push code to main production branch') {
@@ -93,10 +120,10 @@ pipeline {
                 sh '''
                     git config user.name "$GIT_USER"
                     git config user.email "$GIT_USER@users.noreply.github.com"
-
+                    
                     git add .
                     git commit -m "CI: Updated frontend into main production branch" || echo "No changes to commit"
-                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:main
+                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:dev-prod
                 '''
             }
         }
