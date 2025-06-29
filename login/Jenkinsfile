@@ -19,13 +19,6 @@ pipeline {
                 }
             }
         }
-         stage('Installing Dependencies') {
-            steps {
-                dir('login') {
-                    sh 'npm install'
-                }
-            }
-        }
         stage('Unit Test') {
             steps {
                 echo 'Hello World'
@@ -96,28 +89,27 @@ pipeline {
         stage('pulling main production branch') {
             steps {
                 dir('TravelEase') {
-                    git branch: 'main', credentialsId: 'akshat', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
+                    git branch: 'dev-prod', credentialsId: 'akshat', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
-        stage('Updating main production branch') {
+        stage('Updating dev-prod production branch') {
             steps {
                 sh 'mkdir -p ./TravelEase/login'
                 sh 'rsync -av --exclude=".git" ./login/ ./TravelEase/login/'
             }
         }
-        stage('push code to main production branch') {
+        stage('push code to dev-prod production branch') {
             steps {
                 dir('TravelEase') {
             withCredentials([usernamePassword(credentialsId: 'akshat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                git branch: 'main', credentialsId: 'akshat', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 sh '''
                     git config user.name "$GIT_USER"
                     git config user.email "$GIT_USER@users.noreply.github.com"
                     
                     git add .
                     git commit -m "CI: Updated login into main production branch" || echo "No changes to commit"
-                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:main
+                    git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:dev-prod
                 '''
             }
         }

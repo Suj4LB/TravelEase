@@ -24,6 +24,9 @@ app.post("/api/payment", async(req,res)=> {
 
 
 
-app.listen(process.env.PORT || 3001 , () => {
+app.listen(process.env.PORT || 35070 , () => {
   console.log("payment microservice is running.");
 });
+app.get("/", (req, res) => {
+      res.send("Hello World!");
+    });
