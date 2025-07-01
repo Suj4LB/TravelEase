@@ -1,12 +1,8 @@
 pipeline {
     agent any
-    tools{
-        nodejs 'nodejs23'
-    }
     environment{
-        SCANNER_HOME=tool 'sonar-scanner'
         ECR_REGISTERY='794038217891.dkr.ecr.ap-south-1.amazonaws.com'
-        ECR_REPO = 'travelease/frontend'
+        ECR_REPO = 'travelease/nginx-proxy'
         AWS_CREDENTIALS_ID = 'aws-cred'
         AWS_REGION = 'ap-south-1'
     }
@@ -19,22 +15,8 @@ pipeline {
         }
         stage('Git Checkout') {
             steps {
-                dir('frontend') {
-                    git branch: 'frontend', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
-                }
-            }
-        }
-         stage('Installing Dependencies') {
-            steps {
-                dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-         stage('Build Code') {
-            steps {
-                dir('frontend') {
-                    sh 'npm run build'
+                dir('nginx-proxy') {
+                    git branch: 'nginx-proxy', credentialsId: 'bhavesh', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
@@ -43,25 +25,9 @@ pipeline {
                 echo 'Hello World'
             }
         }
-        stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs --format table -o fs-frontend.html .'
-            }
-        }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    dir('frontend') {
-                        sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=TravelEase-frontend -Dsonar.projectKey=TravelEase-frontend \
-                              -Dsonar.sources=.
-                           '''
-                    }
-                }
-            }
-        }
         stage('Build Image') {
             steps {
-                dir('frontend') {
+                dir('nginx-proxy') {
                   sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:latest ."
                 }
                 
@@ -69,7 +35,7 @@ pipeline {
         }
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image --format table -o image-frontend.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
+                sh 'trivy image --format table -o image-nginx-proxy.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
             }
         }
         stage('Upload Trivy scan reports to S3') {
@@ -79,8 +45,7 @@ pipeline {
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'aws-cred'
                     ]]) {
-                        sh 'aws s3 cp image-frontend.html s3://travel-ease-frontend-trivy-report/'
-                        sh 'aws s3 cp fs-frontend.html s3://travel-ease-frontend-trivy-report/'
+                        sh 'aws s3 cp image-nginx-proxy.html s3://travel-ease-nginx-proxy-trivy-report/'
                     }
             
             }
@@ -105,29 +70,29 @@ pipeline {
                 }
             }
         }
-        stage('pulling dev production branch') {
+        stage('pulling dev-prod production branch') {
             steps {
                 dir('TravelEase') {
-                    git branch: 'dev-prod', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
+                    git branch: 'dev-prod', credentialsId: 'bhavesh', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
-        stage('Updating dev production branch') {
+        stage('Updating dev-prod production branch') {
             steps {
-                sh 'mkdir -p ./TravelEase/frontend'
-                sh 'rsync -av --exclude=".git" --exclude="dist" ./frontend/ ./TravelEase/frontend/'
+                sh 'mkdir -p ./TravelEase/nginx-proxy'
+                sh 'rsync -av --exclude=".git" ./nginx-proxy/ ./TravelEase/nginx-proxy/'
             }
         }
-        stage('push code to dev-prod production branch') {
+        stage('push code to prod production branch') {
             steps {
                 dir('TravelEase') {
-            withCredentials([usernamePassword(credentialsId: 'travel', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+            withCredentials([usernamePassword(credentialsId: 'bhavesh', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                 sh '''
                     git config user.name "$GIT_USER"
                     git config user.email "$GIT_USER@users.noreply.github.com"
-                    
+
                     git add .
-                    git commit -m "CI: Updated frontend into dev-prod production branch" || echo "No changes to commit"
+                    git commit -m "CI: Updated payment into dev-prod production branch" || echo "No changes to commit"
                     git push https://$GIT_USER:$GIT_TOKEN@github.com/TravelEase-Xebia/TravelEase.git HEAD:dev-prod
                 '''
             }

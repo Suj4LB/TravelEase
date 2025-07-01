@@ -6,7 +6,7 @@ services:
     networks:
       - mern_network
     environment:
-      MONGO_URL: mongodb+srv://Sujal:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0 
+      MONGO_URI: mongodb+srv://Sujal:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0 
       PORT: 3001 
       
   payment:

@@ -12,6 +12,11 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace'){
+            steps {
+                cleanWs()
+            }
+        }
         stage('Git Checkout') {
             steps {
                 dir('booking') {
@@ -114,6 +119,11 @@ pipeline {
             }
         }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }

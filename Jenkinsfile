@@ -37,7 +37,7 @@ pipeline {
         stage('Git Checkout') {
             steps {
                 dir('TravelEase') {
-                    git branch: 'frontend', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
+                    git branch: 'dev-prod', credentialsId: 'travel', url: 'https://github.com/TravelEase-Xebia/TravelEase.git'
                 }
             }
         }
@@ -65,7 +65,7 @@ pipeline {
         stage('Starting Services') {
             steps {
                 dir('TravelEase') {
-                    sh "docker compose up --build"
+                    sh "docker compose up --build -d"
                 }
             }
         }
@@ -86,12 +86,14 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-cred'
                 ]]) {
+                    dir('TravelEase') {
+                    sh 'aws s3 cp fs-dev-prod.html s3://dev-travel-ease-trivy-report/'
+                    }
                     sh 'aws s3 cp dev-image-frontend.html s3://dev-travel-ease-trivy-report/'
                     sh 'aws s3 cp dev-image-booking.html s3://dev-travel-ease-trivy-report/'
                     sh 'aws s3 cp dev-image-payment.html s3://dev-travel-ease-trivy-report/'
                     sh 'aws s3 cp dev-image-nginx-proxy.html s3://dev-travel-ease-trivy-report/'
                     sh 'aws s3 cp dev-image-login.html s3://dev-travel-ease-trivy-report/'
-                    sh 'aws s3 cp fs-dev-prod.html s3://dev-travel-ease-trivy-report/'
                 }
             }
         }
