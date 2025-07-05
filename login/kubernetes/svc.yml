@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: travelease-login
+  labels:
+    travelease.io/name: travelease-login
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/component: login
+    app.kubernetes.io/name: travelease-login
+    app.kubernetes.io/part-of: travelease-deploy
+spec: 
+  type: ClusterIP
+  ports: 
+    - protocol: TCP
+      port: 5050
+      targetPort: 5050 
+  selector:
+    travelease.io/name: travelease-login  

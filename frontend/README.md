@@ -1,12 +1,81 @@
-# TravelEase Frontend
+TravelEase Frontend ✈️
+ 
+Welcome to the frontend of TravelEase – a modern, cloud-native travel booking platform focused on seamless user experience and performance. Built using React + Vite, 
+this frontend offers fast loading, responsive design, and integration with backend microservices for flight booking, payments, and user authentication.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ 🚀 Features 
+ 
+User Authentication
+Sign Up and Login functionality 
+Secure session handling 
+Search Flights 
+Search based on source, destination, and date
+Book Flights
+Fill in passenger details and confirm bookings
+ 
+ 
+⚙️ Tech Stack 
 
-Currently, two official plugins are available:
+| Category       | Tech Used                 |
+|----------------|---------------------------|
+| Frontend       | React.js (with Vite)      |
+| Styling        | Tailwind CSS              |
+| Routing        | React Router DOM          |
+| State Handling | React Context (or Hooks)  |
+| Deployment     | Docker, AWS EKS           |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Expanding the ESLint configuration
+📁 Folder Structure
+```
+frontend/
+├── public/ Static files
+├── src/
+│ ├── components/ # Reusable UI components
+│ ├── pages/ # Pages like Home, Login, Signup, Booking, Payment
+│ ├── services/ # API services using Axios
+│ ├── App.jsx # Root app with routes
+│ ├── main.jsx # Vite entry point
+│ └── styles/ # Global CSS (if any)
+├── index.html
+├── package.json
+├── tailwind.config.js
+├── vite.config.js
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+Getting Started
+
+1. Prerequisites
+Make sure you have:
+```
+  Node.js >= 16.x
+  npm >= 8.x
+```
+
+2. Installation
+
+Clone the repo and install dependencies:
+```
+git clone https://github.com/TravelEase-Xebia/TravelEase.git
+cd TravelEase/frontend
+npm install
+```
+
+3. Running the App
+   
+Start the development server:
+```
+npm run dev
+App will run at http://localhost:5173
+```
+
+
+🐳 Docker Support
+To run the frontend using Docker:
+```
+docker build -t travelfare-frontend .
+docker run -p 5173:5173 travelfare-frontend
+```
+
+test456789
+testing 

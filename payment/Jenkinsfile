@@ -5,18 +5,16 @@ pipeline {
     }
     environment{
         SCANNER_HOME=tool 'sonar-scanner'
-        ECR_REGISTERY='794038217891.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REGISTERY='831926586767.dkr.ecr.us-east-1.amazonaws.com'
         ECR_REPO = 'travelease/payment'
         AWS_CREDENTIALS_ID = 'aws-cred'
+        AWS_CREDENTIALS_ID2= 'bhavesh-aws'
         AWS_REGION = 'ap-south-1'
+        SNYK_TOKEN = 'snyk-token'
+        IMAGE_TAG = 16073090503
     }
 
     stages {
-        stage('Clean Workspace'){
-            steps{
-                cleanWs()
-            }
-        }
         stage('Git Checkout') {
             steps {
                 dir('payment') {
@@ -45,32 +43,77 @@ pipeline {
                 }
             }
         }
+
+        stage('Snyk Scan') {
+            steps {
+                dir('payment') {
+                    snykSecurity(
+                        snykInstallation: 'snyk@travelease',
+                        snykTokenId: 'travelease_snyk',
+                        failOnIssues: false
+                    )
+                }
+            }
+        }
+stage('Snyk Code Scan (AI)') {
+    steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            withCredentials([
+                string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')
+            ]) {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'bhavesh-aws']
+                ]) {
+                    dir('payment') {
+                        sh """
+                            snyk auth $SNYK_TOKEN
+                            snyk code test > snyk-payment.txt
+                            aws s3 cp snyk-payment.txt s3://travel-ease-snyk-report-b/
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
         stage('Build Image') {
             steps {
                 dir('payment') {
-                  sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:latest ."
+                 sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG} ."
                 }
                 
             }
         }
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image --format table -o image-payment.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
+                sh 'trivy image --format table -o image-payment.html ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG}'
             }
         }
-        stage('Upload Trivy scan reports to S3') {
-            steps {
-              
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-cred'
-                    ]]) {
-                        sh 'aws s3 cp image-payment.html s3://travel-ease-payment-trivy-report/'
-                        sh 'aws s3 cp fs-payment.html s3://travel-ease-payment-trivy-report/'
-                    }
-            
+stage('Upload Trivy and Snyk reports to S3') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'bhavesh-aws'
+        ]]) {
+            sh 'aws s3 cp image-payment.html s3://travel-ease-payment-trivy-report-b/'
+            sh 'aws s3 cp fs-payment.html s3://travel-ease-payment-trivy-report-b/'
+            dir('payment') {
+                sh '''
+                    if [ -f snyk-payment.txt ]; then
+                        aws s3 cp snyk-payment.txt s3://travel-ease-snyk-report-b/
+                        rm snyk-payment.txt
+                    else
+                        echo "No Snyk Code report found to upload."
+                    fi
+                '''
             }
         }
+    }
+}
+
         stage('Login ECR') {
             steps {
                 withCredentials([[
@@ -78,8 +121,8 @@ pipeline {
                   credentialsId: 'aws-cred'
                     ]]) {
                   sh '''
-                    aws ecr get-login-password --region $AWS_REGION | \
-                    docker login --username AWS --password-stdin 794038217891.dkr.ecr.ap-south-1.amazonaws.com
+                    aws ecr get-login-password --region us-east-1 | \
+                    docker login --username AWS --password-stdin 831926586767.dkr.ecr.us-east-1.amazonaws.com
                   '''
                 }
             }
@@ -87,7 +130,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script{
-                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:latest"
+                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }
@@ -119,11 +162,6 @@ pipeline {
             }
         }
             }
-        }
-    }
-    post {
-        always {
-            cleanWs()
         }
     }
 }

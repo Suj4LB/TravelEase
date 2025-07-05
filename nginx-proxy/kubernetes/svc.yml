@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: travelease-frontend-proxy
+  labels:
+    travelease.io/name: travelease-frontend-proxy
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/component: frontendproxy
+    app.kubernetes.io/name: travelease-frontend-proxy
+    app.kubernetes.io/part-of: travelease-deploy
+spec: 
+  type: ClusterIP
+  ports: 
+    - port: 80
+      targetPort: 80 
+      name: tcp-service
+  selector:
+    travelease.io/name: travelease-frontend-proxy  

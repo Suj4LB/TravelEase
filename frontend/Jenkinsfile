@@ -5,10 +5,13 @@ pipeline {
     }
     environment{
         SCANNER_HOME=tool 'sonar-scanner'
-        ECR_REGISTERY='794038217891.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REGISTERY='831926586767.dkr.ecr.us-east-1.amazonaws.com'
         ECR_REPO = 'travelease/frontend'
         AWS_CREDENTIALS_ID = 'aws-cred'
+        AWS_CREDENTIALS_ID2 = 'bhavesh-aws'
         AWS_REGION = 'ap-south-1'
+        SNYK_TOKEN = 'snyk-token'
+        IMAGE_TAG = 16074697737
     }
 
     stages {
@@ -59,17 +62,49 @@ pipeline {
                 }
             }
         }
+        stage('Snyk Scan') {
+            steps {
+                dir('frontend') {
+                    snykSecurity(
+                        snykInstallation: 'snyk@travelease',
+                        snykTokenId: 'travelease_snyk',
+                        failOnIssues: false
+                    )
+                }
+            }
+        }
+        stage('Snyk Code Scan (AI)') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    withCredentials([
+                        string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')
+                    ]) {
+                        withCredentials([
+                            [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'bhavesh-aws']
+                        ]) {
+                            dir('frontend') {
+                                sh """
+                                    snyk auth $SNYK_TOKEN
+                                    snyk code test > snyk-frontend.txt
+                                    aws s3 cp snyk-frontend.txt s3://travel-ease-snyk-frontend-report-b/
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
         stage('Build Image') {
             steps {
                 dir('frontend') {
-                  sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:latest ."
+                  sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG} ."
                 }
                 
             }
         }
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image --format table -o image-frontend.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
+                sh 'trivy image --format table -o image-frontend.html ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG}'
             }
         }
         stage('Upload Trivy scan reports to S3') {
@@ -77,10 +112,10 @@ pipeline {
               
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-cred'
+                        credentialsId: 'bhavesh-aws'
                     ]]) {
-                        sh 'aws s3 cp image-frontend.html s3://travel-ease-frontend-trivy-report/'
-                        sh 'aws s3 cp fs-frontend.html s3://travel-ease-frontend-trivy-report/'
+                        sh 'aws s3 cp image-frontend.html s3://travel-ease-frontend-trivy-report-b/'
+                        sh 'aws s3 cp fs-frontend.html s3://travel-ease-frontend-trivy-report-b/'
                     }
             
             }
@@ -92,8 +127,8 @@ pipeline {
                   credentialsId: 'aws-cred'
                     ]]) {
                   sh '''
-                    aws ecr get-login-password --region $AWS_REGION | \
-                    docker login --username AWS --password-stdin 794038217891.dkr.ecr.ap-south-1.amazonaws.com
+                    aws ecr get-login-password --region us-east-1 | \
+                    docker login --username AWS --password-stdin 831926586767.dkr.ecr.us-east-1.amazonaws.com
                   '''
                 }
             }
@@ -101,7 +136,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script{
-                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:latest"
+                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }

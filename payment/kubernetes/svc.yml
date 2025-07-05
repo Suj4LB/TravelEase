@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: travelease-payment
+  labels:
+    travelease.io/name: travelease-payment
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/component: payment
+    app.kubernetes.io/name: travelease-payment
+    app.kubernetes.io/part-of: travelease-deploy
+spec: 
+  type: ClusterIP
+  ports: 
+    - protocol: TCP
+      port: 5070
+      targetPort: 5070 
+  selector:
+    travelease.io/name: travelease-payment  

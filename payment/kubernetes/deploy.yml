@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travelease-payment
+  labels:
+    travelease.io/name: travelease-payment
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/name: travelease-payment
+    app.kubernetes.io/part-of: travelease-deploy
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      travelease.io/name: travelease-payment
+  template:
+    metadata:
+      labels:
+        travelease.io/name: travelease-payment  
+        app.kubernetes.io/instance: travelease-deploy
+        app.kubernetes.io/name: travelease-payment
+        app.kubernetes.io/component: payment
+
+    spec:
+      serviceAccountName: travelease-deploy   
+      containers:
+        - name: travelease-payment
+          image: 831926586767.dkr.ecr.us-east-1.amazonaws.com/travelease/payment:16073090503
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5070
+              name: service
+          env:
+            - name: MONGO_URI
+              value: "mongodb+srv://Bhavesh:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+            - name: PORT
+              value: "5070"
+          

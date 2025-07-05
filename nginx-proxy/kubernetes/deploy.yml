@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travelease-frontend-proxy
+  labels:
+    travelease.io/name: travelease-frontend-proxy
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/name: travelease-frontend-proxy
+    app.kubernetes.io/part-of: travelease-deploy
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      travelease.io/name: travelease-frontend-proxy
+  template:
+    metadata:
+      labels:
+        travelease.io/name: travelease-frontend-proxy
+        app.kubernetes.io/instance: travelease-deploy
+        app.kubernetes.io/component: frontendproxy
+        app.kubernetes.io/name: travelease-frontend-proxy
+
+    spec:
+      serviceAccountName: travelease-deploy
+      containers:
+        - name: travelease-frontend-proxy
+          image: 831926586767.dkr.ecr.us-east-1.amazonaws.com/travelease/nginx-proxy:16073233821
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: service 
+

@@ -4,6 +4,7 @@
   "description": "This Branch is used for Login/Register MicroService\r Port=5000",
   "main": "index.js",
   "scripts": {
+     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,5 +26,9 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.30.1",
+    "globals": "^16.3.0"
   }
 }

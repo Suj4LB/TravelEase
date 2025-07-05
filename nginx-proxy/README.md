@@ -1,2 +1,2 @@
 TravelEase
-this branch is for nginx
+this branch is for nginx-proxy-

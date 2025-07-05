@@ -1,10 +1,12 @@
 pipeline {
     agent any
     environment{
-        ECR_REGISTERY='794038217891.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REGISTERY='831926586767.dkr.ecr.us-east-1.amazonaws.com'
         ECR_REPO = 'travelease/nginx-proxy'
         AWS_CREDENTIALS_ID = 'aws-cred'
+        AWS_CREDENTIALS_ID2 = 'bhavesh-cred'
         AWS_REGION = 'ap-south-1'
+        IMAGE_TAG = 16073233821
     }
 
     stages {
@@ -20,34 +22,12 @@ pipeline {
                 }
             }
         }
-        stage('Unit Test') {
-            steps {
-                echo 'Hello World'
-            }
-        }
         stage('Build Image') {
             steps {
                 dir('nginx-proxy') {
-                  sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:latest ."
+                  sh "docker build -t ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG} ."
                 }
                 
-            }
-        }
-        stage('Trivy Image Scan') {
-            steps {
-                sh 'trivy image --format table -o image-nginx-proxy.html ${ECR_REGISTERY}/${ECR_REPO}:latest'
-            }
-        }
-        stage('Upload Trivy scan reports to S3') {
-            steps {
-              
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-cred'
-                    ]]) {
-                        sh 'aws s3 cp image-nginx-proxy.html s3://travel-ease-nginx-proxy-trivy-report/'
-                    }
-            
             }
         }
         stage('Login ECR') {
@@ -57,8 +37,8 @@ pipeline {
                   credentialsId: 'aws-cred'
                     ]]) {
                   sh '''
-                    aws ecr get-login-password --region $AWS_REGION | \
-                    docker login --username AWS --password-stdin 794038217891.dkr.ecr.ap-south-1.amazonaws.com
+                    aws ecr get-login-password --region us-east-1 | \
+                    docker login --username AWS --password-stdin 831926586767.dkr.ecr.us-east-1.amazonaws.com
                   '''
                 }
             }
@@ -66,7 +46,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script{
-                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:latest"
+                    sh "docker push ${ECR_REGISTERY}/${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }

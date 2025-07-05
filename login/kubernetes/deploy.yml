@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travelease-login
+  labels:
+    travelease.io/name: travelease-login
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/name: travelease-login
+    app.kubernetes.io/part-of: travelease-deploy
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      travelease.io/name: travelease-login
+  template:
+    metadata:
+      labels:
+        travelease.io/name: travelease-login  
+        app.kubernetes.io/instance: travelease-deploy
+        app.kubernetes.io/component: login
+        app.kubernetes.io/name: travelease-login
+
+    spec:
+      serviceAccountName: travelease-deploy   
+      containers:
+        - name: travelease-login
+          image: 831926586767.dkr.ecr.us-east-1.amazonaws.com/travelease/login:16073159175
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5050
+              name: service
+          env:
+            - name: MONGO_URI
+              value: "mongodb+srv://Bhavesh:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+            - name: PORT
+              value: "5050"
+            - name: JWT_SECRET
+              value: "y2cjouqyr"
+          

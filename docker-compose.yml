@@ -1,5 +1,5 @@
 services:
-  booking:
+  travelease-booking:
     build: ./booking
     ports:
       - "3001" 
@@ -9,7 +9,7 @@ services:
       MONGO_URI: mongodb+srv://Sujal:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0 
       PORT: 3001 
       
-  payment:
+  travelease-payment:
     build: ./payment
     ports:
       - "5070" 
@@ -19,7 +19,7 @@ services:
       MONGO_URI: mongodb+srv://Bhavesh:Admin123@cluster0.ig5deah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0 
       PORT: 5070
       
-  login:
+  travelease-login:
     build: ./login
     ports:
       - "5050" 
@@ -37,9 +37,9 @@ services:
     networks:
       - mern_network
     depends_on:
-      - frontend
+      - travelease-frontend
 
-  frontend:
+  travelease-frontend:
     build:
       context: ./frontend
       args:
@@ -55,9 +55,9 @@ services:
       VITE_PAYMENT_API_URL: /api/payment
       VITE_BOOKING_API_URL: /api/booking
     depends_on:
-      - booking
-      - payment
-      - login
+      - travelease-booking
+      - travelease-payment
+      - travelease-login
 
 networks:
   mern_network:

@@ -9,7 +9,9 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         ECR_REPO = 'travelease'
         AWS_CREDENTIALS_ID = 'aws-cred'
+        AWS_CREDENTIALS_ID2 = 'bhavesh-cred'
         AWS_REGION = 'ap-south-1'
+        
     }
 
     stages {
@@ -34,6 +36,7 @@ pipeline {
             }
         }
 
+
         stage('Git Checkout') {
             steps {
                 dir('TravelEase') {
@@ -42,21 +45,25 @@ pipeline {
             }
         }
 
-        stage('Trivy FS Scan') {
-            steps {
-                dir('TravelEase') {
-                    sh 'trivy fs --format table -o fs-dev-prod.html .'
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    dir('TravelEase') {
-                        sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=TravelEase-dev-prod -Dsonar.projectKey=TravelEase-dev-prod \
-                              -Dsonar.sources=.
-                           '''
+                stage('Snyk Code Scan (AI)') {
+                    steps { 
+                        withCredentials([
+                            [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'bhavesh-aws']
+                        ]) {
+                    dir('booking') {
+                        sh """
+                            aws s3 cp snyk-booking-report.txt s3://travel-ease-booking-b-snyk/
+                        """
+                    }
+                    dir('login') {
+                        sh """
+                            aws s3 cp snyk-login.txt s3://travel-ease-snyk-login-report-b/
+                        """
+                    }
+                     dir('frontend') {
+                        sh """
+                            aws s3 cp snyk-frontend.txt s3://travel-ease-snyk-frontend-report-b/
+                        """
                     }
                 }
             }
@@ -70,38 +77,5 @@ pipeline {
             }
         }
 
-        stage('Trivy Image Scan') {
-            steps {
-                sh "trivy image --format table -o dev-image-frontend.html ${ECR_REPO}-frontend:latest"
-                sh "trivy image --format table -o dev-image-payment.html ${ECR_REPO}-payment:latest"
-                sh "trivy image --format table -o dev-image-booking.html ${ECR_REPO}-booking:latest"
-                sh "trivy image --format table -o dev-image-nginx-proxy.html ${ECR_REPO}-nginx-proxy:latest"
-                sh "trivy image --format table -o dev-image-login.html ${ECR_REPO}-login:latest"
-            }
-        }
-
-        stage('Upload Trivy scan reports to S3') {
-            steps {
-                withCredentials([[ 
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-cred'
-                ]]) {
-                    dir('TravelEase') {
-                    sh 'aws s3 cp fs-dev-prod.html s3://dev-travel-ease-trivy-report/'
-                    }
-                    sh 'aws s3 cp dev-image-frontend.html s3://dev-travel-ease-trivy-report/'
-                    sh 'aws s3 cp dev-image-booking.html s3://dev-travel-ease-trivy-report/'
-                    sh 'aws s3 cp dev-image-payment.html s3://dev-travel-ease-trivy-report/'
-                    sh 'aws s3 cp dev-image-nginx-proxy.html s3://dev-travel-ease-trivy-report/'
-                    sh 'aws s3 cp dev-image-login.html s3://dev-travel-ease-trivy-report/'
-                }
-            }
-        }
-
-        stage('Branch update') {
-            steps {
-                echo 'Hello World'
-            }
-        }
     }
 }

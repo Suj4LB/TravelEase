@@ -1,0 +1,28 @@
+
+Testing /var/lib/jenkins/workspace/travel_ease_login/login ...
+
+Open Issues
+
+ ✗ [MEDIUM] Information Exposure
+   Path: Server.js, line 8
+   Info: Disable X-Powered-By header for your Express app (consider using Helmet middleware), because it exposes information about the used framework to potential attackers.
+
+
+
+╭────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                               │
+│                                                                            │
+│   Organization:                                                            │
+│   Test type:         Static code analysis                                  │
+│   Project path:      /var/lib/jenkins/workspace/travel_ease_login/login    │
+│                                                                            │
+│   Total issues:   1                                                        │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]                            │
+│   Open issues:    1 [ 0 HIGH  1 MEDIUM  0 LOW ]                            │
+╰────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+

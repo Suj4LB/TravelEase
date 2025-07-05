@@ -27,7 +27,7 @@ app.post("/api/bookings", async (req, res) => {
   await newBooking.save();
   res.json({ message: "Booking successful", booking: newBooking });
 });
-
+//test route 
 app.get("/api/searchflights", async(req,res)=>{
   const {departure, destination} = req.query;
   if(!departure || !destination){

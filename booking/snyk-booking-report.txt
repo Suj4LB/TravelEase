@@ -1,0 +1,40 @@
+
+Testing /var/lib/jenkins/workspace/travel_ease_booking/booking ...
+
+Open Issues
+
+ ✗ [MEDIUM] Information Exposure
+   Path: server.js, line 7
+   Info: Disable X-Powered-By header for your Express app (consider using Helmet middleware), because it exposes information about the used framework to potential attackers.
+
+ ✗ [MEDIUM] Allocation of Resources Without Limits or Throttling
+   Path: server.js, line 13
+   Info: Expensive operation (a file system operation) is performed by an endpoint handler which does not use a rate-limiting mechanism. It may enable the attackers to perform Denial-of-service attacks. Consider using a rate-limiting middleware such as express-limit.
+
+ ✗ [HIGH] Regular Expression Denial of Service (ReDoS)
+   Path: server.js, line 39
+   Info: Unsanitized user input from an HTTP parameter flows into RegExp, where it is used to build a regular expression. This may result in a Regular expression Denial of Service attack (reDOS).
+
+ ✗ [HIGH] Regular Expression Denial of Service (ReDoS)
+   Path: server.js, line 40
+   Info: Unsanitized user input from an HTTP parameter flows into RegExp, where it is used to build a regular expression. This may result in a Regular expression Denial of Service attack (reDOS).
+
+
+
+╭────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                   │
+│                                                                                │
+│   Organization:                                                                │
+│   Test type:         Static code analysis                                      │
+│   Project path:      /var/lib/jenkins/workspace/travel_ease_booking/booking    │
+│                                                                                │
+│   Total issues:   4                                                            │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]                                │
+│   Open issues:    4 [ 2 HIGH  2 MEDIUM  0 LOW ]                                │
+╰────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+

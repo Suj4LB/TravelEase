@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: travelease-booking
+  labels:
+    travelease.io/name: travelease-booking
+    app.kubernetes.io/instance: travelease-deploy
+    app.kubernetes.io/component: booking
+    app.kubernetes.io/name: travelease-booking
+    app.kubernetes.io/part-of: travelease-deploy
+spec: 
+  type: ClusterIP
+  ports: 
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001 
+  selector:
+    travelease.io/name: travelease-booking  
